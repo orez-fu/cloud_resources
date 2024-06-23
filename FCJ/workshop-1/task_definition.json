@@ -1,0 +1,71 @@
+{
+  "taskDefinitionArn": "arn:aws:ecs:us-east-1:423469628742:task-definition/sample-fargate:7",
+  "containerDefinitions": [
+    {
+      "name": "fargate-app",
+      "image": "public.ecr.aws/docker/library/httpd:latest",
+      "cpu": 0,
+      "portMappings": [
+        {
+          "name": "fargate-app-80-tcp",
+          "containerPort": 80,
+          "hostPort": 80,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "entryPoint": ["sh", "-c"],
+      "command": [
+        "/bin/sh -c \"cp /ws-stuff/html/index.html  /usr/local/apache2/htdocs/index.html && httpd-foreground\""
+      ],
+      "environment": [],
+      "mountPoints": [
+        {
+          "sourceVolume": "ws-share",
+          "containerPath": "/ws-stuff",
+          "readOnly": true
+        }
+      ],
+      "volumesFrom": [],
+      "systemControls": []
+    }
+  ],
+  "family": "sample-fargate",
+  "networkMode": "awsvpc",
+  "revision": 7,
+  "volumes": [
+    {
+      "name": "ws-share",
+      "efsVolumeConfiguration": {
+        "fileSystemId": "fs-09d0a6e822b5d858f",
+        "rootDirectory": "/ws-stuff"
+      }
+    }
+  ],
+  "status": "ACTIVE",
+  "requiresAttributes": [
+    {
+      "name": "ecs.capability.efsAuth"
+    },
+    {
+      "name": "ecs.capability.efs"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.25"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+    },
+    {
+      "name": "ecs.capability.task-eni"
+    }
+  ],
+  "placementConstraints": [],
+  "compatibilities": ["EC2", "FARGATE"],
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "registeredAt": "2024-04-07T08:01:30.033Z",
+  "registeredBy": "arn:aws:iam::423469628742:root",
+  "tags": []
+}
