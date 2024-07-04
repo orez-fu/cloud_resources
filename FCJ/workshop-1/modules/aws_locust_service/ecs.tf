@@ -107,5 +107,181 @@ resource "aws_ecs_service" "ecs_service" {
   depends_on = [
     aws_lb_listener.http
   ]
+
+  # service_registries {
+  #   registry_arn = aws_service_discovery_service.ecs_service_discovery.arn
+  # }
 }
 
+
+resource "aws_ecs_task_definition" "ecs_task_master" {
+  family                   = "${var.project}-ecs-task"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = "255"
+  memory                   = "511"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_execution_role.arn
+
+  container_definitions = jsonencode([
+    {
+      name  = "${var.project}-locust",
+      image = "locustio/locust:${var.ecs_task_locust_version}"
+      "command" = [
+        "--master",
+        "-f",
+        "/mnt/efs/${var.ecs_task_locust_file}",
+        "-H",
+        "https://randomuser.me"
+      ]
+      essential = true
+      portMappings = [
+        {
+          containerPort = 8088
+          hostPort      = 8088
+        }
+      ]
+      environment = [
+        {
+          "name" : "LOCUST_MODE",
+          "value" : "standalone"
+        }
+      ]
+      mountPoints = [
+        {
+          "sourceVolume" : "efs-volume",
+          "containerPath" : "/mnt/efs"
+          "readOnly" : false
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.log_group.name
+          "awslogs-region"        = var.region
+          "awslogs-stream-prefix" = "ecs"
+        }
+      }
+    }
+  ])
+
+  volume {
+    name = "efs-volume"
+    efs_volume_configuration {
+      file_system_id          = data.aws_efs_file_system.efs.file_system_id
+      root_directory          = "/"
+      transit_encryption      = "ENABLED"
+      transit_encryption_port = 2998
+
+      authorization_config {
+        access_point_id = aws_efs_access_point.efs_ap.id
+        iam             = "ENABLED"
+      }
+    }
+  }
+}
+
+# resource "aws_ecs_task_set" "ecs_task_set_master" {
+#   cluster         = data.aws_ecs_cluster.ecs_cluster.arn
+#   service         = aws_ecs_service.ecs_service.name
+#   task_definition = aws_ecs_task_definition.ecs_task_master.arn
+
+#   network_configuration {
+#     subnets          = data.aws_subnets.private_subnet.ids
+#     security_groups  = [aws_security_group.ecs_sg.id]
+#     assign_public_ip = false
+#   }
+
+#   load_balancer {
+#     target_group_arn = aws_lb_target_group.ecs_lb_tg.arn
+#     container_name   = "${var.project}-locust"
+#     container_port   = 8089
+#   }
+# }
+
+# resource "aws_ecs_task_definition" "ecs_task_slave" {
+#   family                   = "${var.project}-ecs-task"
+#   requires_compatibilities = ["FARGATE"]
+#   network_mode             = "awsvpc"
+#   cpu                      = "255"
+#   memory                   = "511"
+#   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+#   task_role_arn            = aws_iam_role.ecs_task_execution_role.arn
+
+#   container_definitions = jsonencode([
+#     {
+#       name  = "${var.project}-locust",
+#       image = "locustio/locust:${var.ecs_task_locust_version}"
+#       "command" = [
+#         "--worker",
+#         "--master-host=${aws_ecs_task_set.ecs_task_set_master.name}",
+#         "-f",
+#         "/mnt/efs/${var.ecs_task_locust_file}",
+#         "-H",
+#         "https://randomuser.me"
+#       ]
+#       essential = true
+#       portMappings = [
+#         {
+#           containerPort = 8088
+#           hostPort      = 8088
+#         }
+#       ]
+#       environment = [
+#         {
+#           "name" : "LOCUST_MODE",
+#           "value" : "standalone"
+#         }
+#       ]
+#       mountPoints = [
+#         {
+#           "sourceVolume" : "efs-volume",
+#           "containerPath" : "/mnt/efs"
+#           "readOnly" : false
+#         }
+#       ]
+#       logConfiguration = {
+#         logDriver = "awslogs"
+#         options = {
+#           "awslogs-group"         = aws_cloudwatch_log_group.log_group.name
+#           "awslogs-region"        = var.region
+#           "awslogs-stream-prefix" = "ecs"
+#         }
+#       }
+#     }
+#   ])
+
+#   volume {
+#     name = "efs-volume"
+#     efs_volume_configuration {
+#       file_system_id          = data.aws_efs_file_system.efs.file_system_id
+#       root_directory          = "/"
+#       transit_encryption      = "ENABLED"
+#       transit_encryption_port = 2998
+
+#       authorization_config {
+#         access_point_id = aws_efs_access_point.efs_ap.id
+#         iam             = "ENABLED"
+#       }
+#     }
+#   }
+# }
+
+
+# resource "aws_ecs_task_set" "ecs_task_set_slave" {
+#   cluster         = data.aws_ecs_cluster.ecs_cluster.arn
+#   service         = aws_ecs_service.ecs_service.name
+#   task_definition = aws_ecs_task_definition.ecs_task_slave.arn
+
+#   network_configuration {
+#     subnets          = data.aws_subnets.private_subnet.ids
+#     security_groups  = [aws_security_group.ecs_sg.id]
+#     assign_public_ip = false
+#   }
+
+#   load_balancer {
+#     target_group_arn = aws_lb_target_group.ecs_lb_tg.arn
+#     container_name   = "${var.project}-locust"
+#     container_port   = 8089
+#   }
+# }
