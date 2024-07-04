@@ -8,8 +8,8 @@ resource "aws_security_group" "ecs_sg" {
   vpc_id      = data.aws_vpc.vpc.id
 
   ingress {
-    from_port   = 80
-    to_port     = 80
+    from_port   = 8089
+    to_port     = 8089
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -32,13 +32,13 @@ resource "aws_ecs_task_definition" "ecs_task" {
 
   container_definitions = jsonencode([
     {
-      name      = "${var.project}-locust",
-      image     = "locustio/locust:${var.ecs_task_locust_version}"
-      essential = true
+      name  = "${var.project}-locust",
+      image = "locustio/locust:${var.ecs_task_locust_version}"
       "command" = [
         "-f",
         "/mnt/efs/${var.ecs_task_locust_file}"
       ]
+      essential = true
       portMappings = [
         {
           containerPort = 8089
@@ -108,6 +108,4 @@ resource "aws_ecs_service" "ecs_service" {
     aws_lb_listener.http
   ]
 }
-
-
 

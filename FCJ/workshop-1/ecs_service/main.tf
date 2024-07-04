@@ -9,7 +9,7 @@ module "aws_locust_ecs_service" {
   }
 
   ecs_task_locust_version = "2.29.0"
-  ecs_task_locust_file    = "locust_sample/hello_world/locustfile.py"
+  ecs_task_locust_file    = "sample_locust/user_generator/locustfile.py"
 }
 
 output "alb_dns_name" {
