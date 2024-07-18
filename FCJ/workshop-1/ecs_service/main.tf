@@ -16,6 +16,6 @@ output "alb_dns_name" {
   value = module.aws_locust_ecs_service.alb_dns_name
 }
 
-output "aws_service_name" {
-  value = module.aws_locust_ecs_service.aws_service_name
+output "aws_service_master_name" {
+  value = module.aws_locust_ecs_service.aws_service_master_name
 }
