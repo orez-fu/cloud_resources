@@ -44,9 +44,7 @@ resource "aws_ecs_task_definition" "ecs_task_master" {
       "command" = [
         "--master",
         "-f",
-        "/mnt/efs/${var.ecs_task_locust_file}",
-        "-H",
-        "https://randomuser.me"
+        "/mnt/efs/${var.ecs_task_locust_file}"
       ]
       essential = true
       portMappings = [
@@ -208,13 +206,18 @@ resource "aws_ecs_service" "ecs_service_worker" {
   name            = "${var.project}-ecs-service-worker"
   cluster         = data.aws_ecs_cluster.ecs_cluster.arn
   task_definition = aws_ecs_task_definition.ecs_task_worker.arn
-  desired_count   = 2
+  desired_count   = var.ecs_task_worker_desire
   launch_type     = "FARGATE"
 
   network_configuration {
     subnets         = data.aws_subnets.private_subnet.ids
     security_groups = [aws_security_group.ecs_sg.id]
+  }
 
+  lifecycle {
+    ignore_changes = [
+      desired_count
+    ]
   }
 }
 
