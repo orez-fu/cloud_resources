@@ -29,3 +29,10 @@ output "ecs_cluster_id" {
 output "efs_id" {
   value = module.aws_locust_ecs_infra.efs_id
 }
+
+output "bastion_public_ip" {
+  value = module.aws_locust_ecs_infra.bastion_public_ip
+}
+output "bastion_username" {
+  value = module.aws_locust_ecs_infra.bastion_username
+}
