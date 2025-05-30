@@ -35,6 +35,22 @@ module "bastion" {
   # bastion_ami        = "ami-0c55b159cbfafe1f0"
   # bastion_instance_type = "t2.micro"
 }
+
+module "eks" {
+  source                                   = "./modules/eks"
+  vpc_id                                   = module.network.vpc_id
+  subnet_ids                               = module.network.private_subnet_ids
+  cluster_endpoint_public_access           = true
+  enable_cluster_creator_admin_permissions = true
+  public_subnet_cidrs                      = module.network.public_subnet_cidrs
+  tags = {
+    Environment = "lab"
+    Project     = "poc"
+    Owner       = "labor"
+  }
+}
+
+
 output "bastion_public_ip" {
   value = module.bastion.bastion_public_ip
 }

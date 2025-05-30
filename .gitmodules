@@ -1,0 +1,3 @@
+[submodule "k6-pt-demo"]
+	path = Blogger/K7_Series
+	url = git@github.com:orez-fu/k6-pt-demo.git
